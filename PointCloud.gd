@@ -27,7 +27,10 @@ func _input(event):
 		vertices[0] = scalef*( Vector3(randf(),randf(),randf()) - Vector3(0.5,0.5,0.5) )
 		update_mesh()
 
-func setup_search():
+func _process(delta):
+	pass
+
+func setup_search(): # organizes vertices into unit grid cells which are aware of their neighbors
 	for i in range(vertices.size()):
 		var point := vertices[i]
 		var key := Vector3i(floori(point.x), floori(point.y), floori(point.z))
@@ -51,9 +54,12 @@ func bfs():
 	bfs_queue = []
 	lines = []
 	var colori = 0.0
+	
 	while (!bfs_points.is_empty()) :
 		if bfs_queue.is_empty() :
 			bfs_queue.push_back(bfs_points.pop_back())
+			colors[bfs_queue[0]] = Color.from_hsv(colori/vertices.size(), 0.5, 0.8)
+			colori += 1.0
 		var point := vertices[bfs_queue[0]]
 		var cell : Cell = cells[Vector3i(floori(point.x), floori(point.y), floori(point.z))] # must exist
 		var i := 0
@@ -63,6 +69,8 @@ func bfs():
 				cell.points.remove_at(i)
 			elif point.distance_squared_to(vertices[v]) < 1.0 : 
 				bfs_queue.push_back(v) # add near point to queue
+				colors[v] = Color.from_hsv(colori/vertices.size(), 0.5, 0.8)
+				colori += 1.0
 				bfs_points.remove_at(bfs_points.find(v))
 				lines.append_array([bfs_queue[0], v]) # add line to near point
 				cell.points.remove_at(i)
@@ -76,6 +84,8 @@ func bfs():
 				var v = neighbor.points[i]
 				if point.distance_squared_to(vertices[v]) < 1.0 : 
 					bfs_queue.push_back(v) # add near point to queue
+					colors[v] = Color.from_hsv(colori/vertices.size(), 0.5, 0.8)
+					colori += 1.0
 					bfs_points.remove_at(bfs_points.find(v)) 
 					lines.append_array([bfs_queue[0], v]) # add line to near point
 					neighbor.points.remove_at(i)
@@ -91,8 +101,6 @@ func bfs():
 			#for n2 in cell.neighbors :
 				#n2.neighbors.remove_at(n2.neighbors.find(cell))
 			#cells.erase(cell.key)
-		colors[bfs_queue[0]] = Color.from_hsv(colori/vertices.size(), 0.5, 0.8)
-		colori += 1.0
 		bfs_queue.pop_front()
 
 func update_mesh():

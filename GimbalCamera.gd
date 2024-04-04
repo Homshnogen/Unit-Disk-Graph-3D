@@ -25,11 +25,21 @@ func _input(event):
 	pass
 
 func rotate_camera(angle : float):
-	var box = $CameraRotate
-	box.transform = box.transform.rotated(Vector3.DOWN, angle)
+	var box : Node3D = $CameraRotate
+	box.transform = box.transform.rotated(box.transform.basis.y, -angle).orthonormalized()
 	pass
 
+#func rotate_camera(angle : float):
+	#var box = $CameraRotate
+	#box.transform = box.transform.rotated(Vector3.DOWN, angle)
+	#pass
+
 func elevate_camera(angle : float):
-	var box = $CameraRotate/CameraElevate
-	box.transform = box.transform.rotated(Vector3.LEFT, angle)
+	var box := $CameraRotate
+	box.transform = box.transform.rotated(box.transform.basis.x, -angle).orthonormalized()
 	pass
+
+#func elevate_camera(angle : float):
+	#var box = $CameraRotate/CameraElevate
+	#box.transform = box.transform.rotated(Vector3.LEFT, angle)
+	#pass
