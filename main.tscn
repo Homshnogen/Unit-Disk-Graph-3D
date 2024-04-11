@@ -26,4 +26,10 @@ script = ExtResource("2_igwio")
 [node name="CameraElevate" type="Node3D" parent="GimbalCamera/CameraRotate"]
 
 [node name="Camera3D" type="Camera3D" parent="GimbalCamera/CameraRotate/CameraElevate"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.68842)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.6)
+
+[node name="CameraPos2" type="Node3D" parent="GimbalCamera/CameraRotate/CameraElevate"]
+transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, -0.8, 0, 1.386)
+
+[node name="CameraPos1" type="Node3D" parent="GimbalCamera/CameraRotate/CameraElevate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.6)
