@@ -30,17 +30,26 @@ func _input(event):
 	if (Input.is_action_just_pressed("reset_points") and event is InputEventKey) :
 		reset_points()
 		bfs_reset()
-	elif (Input.is_action_just_pressed("action1")) :
-		vertices[0] = scalef*( Vector3(randf(),randf(),randf()) - Vector3(0.5,0.5,0.5) )
-		update_mesh()
 
 var compound_time := 0.0
+# maybe make this into enum state (paused, auto, instant)
+var bfs_paused := true
+var bfs_speed := 0.00
+var bfs_instant := false
 func _process(delta):
-	compound_time += delta
-	if (compound_time >= 0.125) :
-		compound_time -= 0.125
-		bfs_next.emit()
-		update_mesh()
+	if bfs_instant :
+		if (bfs_state.running) :
+			while (bfs_state.running) :
+				bfs_next.emit()
+			update_mesh()
+	else :
+		if !bfs_paused  :
+			compound_time += delta
+			if (compound_time >= bfs_speed) :
+				compound_time -= bfs_speed
+				bfs_next.emit()
+				update_mesh()
+	
 
 func bfs_reset(): # handles instances of bfs call memory
 	bfs_state.running = false
@@ -144,13 +153,15 @@ func update_mesh():
 	arrs[Mesh.ARRAY_VERTEX] = vertices
 	arrs[Mesh.ARRAY_COLOR] = colors
 	array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_POINTS, arrs)
-	arrs[Mesh.ARRAY_INDEX] = lines
-	array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_LINES, arrs)
+	if (lines.size() > 0) :
+		arrs[Mesh.ARRAY_INDEX] = lines
+		array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_LINES, arrs)
 	
 	mesh_instance = MeshInstance3D.new()
 	mesh_instance.mesh = array_mesh
 	mesh_instance.set_surface_override_material(0, point_material)
-	mesh_instance.set_surface_override_material(1, line_material)
+	if (lines.size() > 0) :
+		mesh_instance.set_surface_override_material(1, line_material)
 	add_child(mesh_instance)
 
 func reset_points():
