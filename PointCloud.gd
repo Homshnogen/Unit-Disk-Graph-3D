@@ -27,28 +27,31 @@ func _ready():
 	bfs_reset()
 
 func _input(event):
-	if (Input.is_action_just_pressed("reset_points") and event is InputEventKey) :
+	if (Input.is_action_just_pressed("reset_points")) :
 		reset_points()
 		bfs_reset()
+	elif (Input.is_action_just_pressed("step_forward")) and GlobalState.state == GlobalState.STATE_PAUSED :
+		bfs_next.emit()
+		update_mesh()
 
 var compound_time := 0.0
 # maybe make this into enum state (paused, auto, instant)
-var bfs_paused := true
 var bfs_speed := 0.00
-var bfs_instant := false
+
 func _process(delta):
-	if bfs_instant :
-		if (bfs_state.running) :
-			while (bfs_state.running) :
-				bfs_next.emit()
-			update_mesh()
-	else :
-		if !bfs_paused  :
+	match GlobalState.state:
+		GlobalState.STATE_INSTANT :
+			if (bfs_state.running) :
+				while (bfs_state.running) :
+					bfs_next.emit()
+				update_mesh()
+		GlobalState.STATE_AUTO :
 			compound_time += delta
 			if (compound_time >= bfs_speed) :
 				compound_time -= bfs_speed
 				bfs_next.emit()
 				update_mesh()
+		# GlobalState.STATE_PAUSED :
 	
 
 func bfs_reset(): # handles instances of bfs call memory
