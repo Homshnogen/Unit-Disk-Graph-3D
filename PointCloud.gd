@@ -67,12 +67,23 @@ func setup_search(): # organizes vertices into unit grid cells which are aware o
 		var key := Vector3i(floori(point.x), floori(point.y), floori(point.z))
 		var cell : Cell = cells.get(key);
 		if (cell == null) :
-			cells[key] = Cell.new(key)
-			cell = cells[key]
-			for key2 in cells :
-				if (key - (key2 as Vector3i)).length_squared() <= 3 : # within one unit in each dimension
-					(cells[key2] as Cell).neighbors.append(cell)
-					cell.neighbors.append(cells[key2])
+			cell = Cell.new(key)
+			var key2 := Vector3i() # should be copy
+			for kx in range(-1, 2) :
+				key2.x = key.x + kx
+				for ky in range(-1, 2) :
+					key2.y = key.y + ky
+					for kz in range(-1, 2) :
+						key2.z = key.z + kz
+						if cells.has(key2) :
+							(cells[key2] as Cell).neighbors.append(cell)
+							cell.neighbors.append(cells[key2])
+			cells[key] = cell
+			
+			#for key2 in cells : # this is slower than it needs to be
+				#if (key - (key2 as Vector3i)).length_squared() <= 3 : # within one unit in each dimension
+					#(cells[key2] as Cell).neighbors.append(cell)
+					#cell.neighbors.append(cells[key2])
 		cell.points.append(i)
 
 func bfs(state : bfs_Controller):
