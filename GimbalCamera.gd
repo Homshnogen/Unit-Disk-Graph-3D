@@ -4,6 +4,8 @@ extends Node3D
 # var a = 2
 # var b = "text"
 
+@export var point_cloud : Node3D
+
 var Poses : Array[Node3D]
 var active_pose : int
 var camera : Camera3D
@@ -17,43 +19,61 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	return
 	var tf := 1.0 - pow(0.01, delta) # 1 -> 0.99
 	camera.transform = camera.transform.interpolate_with(Poses[active_pose].transform, tf)
 
+func drag_camera(x : float, y: float) :
+	rotate_camera(x)
+	elevate_camera(y)
+
+func place_point() :
+	var mouse := get_viewport().get_mouse_position()
+	var array_mesh = ArrayMesh.new()
+	var arrs = []
+	arrs.resize(Mesh.ARRAY_MAX)
+	var vertices : PackedVector3Array = [camera.project_position(mouse, -0.5 + local_camera_distance), camera.project_position(mouse, 2 + local_camera_distance)]
+	var colors : PackedColorArray = [Color.WHITE, Color.BLACK]
+	var lines : PackedInt32Array = [0, 1]
+	arrs[Mesh.ARRAY_VERTEX] = vertices
+	arrs[Mesh.ARRAY_COLOR] = colors
+	array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_POINTS, arrs)
+	arrs[Mesh.ARRAY_INDEX] = lines
+	array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_LINES, arrs)
+	
+	var mesh_instance = MeshInstance3D.new()
+	mesh_instance.mesh = array_mesh
+	mesh_instance.set_surface_override_material(0, ResourceLoader.load("res://point_material.tres", "Material") as Material)
+	mesh_instance.set_surface_override_material(1, ResourceLoader.load("res://line_material.tres", "Material") as Material)
+	if place_hint :
+		place_hint.queue_free()
+	add_child(mesh_instance)
+	place_hint = mesh_instance
+
+var local_camera_distance := 1.0
+
 func _input(event):
 	if event is InputEventScreenDrag:
-		print_debug("drag")
-		var relative = event.speed
-		rotate_camera(relative.x)
-		elevate_camera(relative.y)
+		print_debug("drag") # for touchscreens
+		drag_camera(event.speed.x, event.speed.y)
 	elif Input.is_action_pressed("drag_camera") and event is InputEventMouseMotion:
-		var relative = event.relative
-		rotate_camera(relative.x / 180)
-		elevate_camera(relative.y / 180)
+		drag_camera(event.relative.x / 180, event.relative.y / 180)
 	elif Input.is_action_just_pressed("toggle_camera"):
-		active_pose = 1-active_pose
+		active_pose = (active_pose + 1) % Poses.size()
 	elif (Input.is_action_just_pressed("place_point")) :
-		var mouse := get_viewport().get_mouse_position()
-		var array_mesh = ArrayMesh.new()
-		var arrs = []
-		arrs.resize(Mesh.ARRAY_MAX)
-		var vertices : PackedVector3Array = [camera.project_position(mouse, 1), camera.project_position(mouse, 2)]
-		var colors : PackedColorArray = [Color.WHITE, Color.BLACK]
-		var lines : PackedInt32Array = [0, 1]
-		arrs[Mesh.ARRAY_VERTEX] = vertices
-		arrs[Mesh.ARRAY_COLOR] = colors
-		array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_POINTS, arrs)
-		arrs[Mesh.ARRAY_INDEX] = lines
-		array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_LINES, arrs)
-		
-		var mesh_instance = MeshInstance3D.new()
-		mesh_instance.mesh = array_mesh
-		mesh_instance.set_surface_override_material(0, ResourceLoader.load("res://point_material.tres", "Material") as Material)
-		mesh_instance.set_surface_override_material(1, ResourceLoader.load("res://line_material.tres", "Material") as Material)
-		if place_hint :
-			place_hint.queue_free()
-		add_child(mesh_instance)
-		place_hint = mesh_instance
+		place_point()
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_WHEEL_UP: 
+		if local_camera_distance > 0.0 :
+			var node : Node3D = $CameraRotate/CameraElevate/Camera3D
+			node.transform = node.transform.translated_local(Vector3(0.0, 0.0, -0.05))
+			local_camera_distance -= 0.05
+			print(local_camera_distance)
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_WHEEL_DOWN: 
+		if local_camera_distance < 1.5 :
+			var node : Node3D = $CameraRotate/CameraElevate/Camera3D
+			node.transform = node.transform.translated_local(Vector3(0.0, 0.0, 0.05))
+			local_camera_distance += 0.05
+			print(local_camera_distance)
 	pass
 
 func rotate_camera(angle : float):

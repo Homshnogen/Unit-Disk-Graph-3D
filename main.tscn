@@ -18,8 +18,9 @@ script = ExtResource("1_gxch6")
 point_material = ExtResource("2_ir81f")
 line_material = ExtResource("3_mpno3")
 
-[node name="GimbalCamera" type="Node3D" parent="."]
+[node name="GimbalCamera" type="Node3D" parent="." node_paths=PackedStringArray("point_cloud")]
 script = ExtResource("2_igwio")
+point_cloud = NodePath("../PointCloud")
 
 [node name="CameraRotate" type="Node3D" parent="GimbalCamera"]
 
@@ -33,3 +34,16 @@ transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, -0.8, 0, 1
 
 [node name="CameraPos1" type="Node3D" parent="GimbalCamera/CameraRotate/CameraElevate"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.6)
+
+[node name="Label" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+text = "Q: Add point
+I: Toggle fill graph instantly
+O: Toggle automatic graph fill
+P: Toggle pause graph fill
+X: Step forward once in graph fill
+
+
+Rotate camera by left click and drag
+Zoom camera by scroll wheel"
