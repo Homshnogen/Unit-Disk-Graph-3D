@@ -10,6 +10,8 @@ var Poses : Array[Node3D]
 var active_pose : int
 var camera : Camera3D
 var place_hint : MeshInstance3D
+var place_hint_vertices : PackedVector3Array
+var place_hint_point : MeshInstance3D
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	active_pose = 0
@@ -19,6 +21,64 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	if (place_hint_vertices) :
+		var mouse := get_viewport().get_mouse_position()
+		var C1 := camera.unproject_position(place_hint_vertices[0])
+		var D1 := camera.unproject_position(place_hint_vertices[1]) - C1
+		var t1 := (mouse - C1).dot(D1) / D1.dot(D1)
+		var point1 := C1 + t1*D1 # point that is closest to mouse on screen
+		if point1.x > get_viewport().size.x :
+			var diff = get_viewport().size.x - point1.x
+			point1 += D1 * (diff/D1.x)
+		elif point1.x < 0.0 :
+			var diff = -point1.x
+			point1 += D1 * (diff/D1.x)
+		if point1.y > get_viewport().size.y :
+			var diff = get_viewport().size.y - point1.y
+			point1 += D1 * (diff/D1.y)
+		elif point1.y < 0.0 :
+			var diff = -point1.y
+			point1 += D1 * (diff/D1.y)
+		
+		var B2 := camera.project_ray_normal(point1)
+		var A2 := camera.project_ray_origin(point1)
+		var C2 := place_hint_vertices[0]
+		var D2 := place_hint_vertices[1] - C2
+		
+		var t2 := (A2-C2-B2*B2.dot(A2-C2)).x/(D2-B2*B2.dot(D2)).x # point through point1 that intersects line
+		
+		#var mousevec := camera.project_ray_normal(mouse)
+		#var camerapos := camera.project_ray_origin(mouse)
+		#var pln := mousevec.cross(camera.project_ray_normal(point1))
+		#var t2 := pln.dot(camerapos-place_hint_vertices[0]) / pln.dot(place_hint_vertices[1] - place_hint_vertices[0])
+		
+		# var point2d = C + t*D
+		#var mousevec := camera.project_ray_normal(mouse)
+		#var camerapos := camera.project_ray_origin(mouse)
+		#var D := (place_hint_vertices[1]-place_hint_vertices[0])
+		#var cos := D.dot(mousevec)
+		#var t := (camerapos - place_hint_vertices[0]).dot(D - cos*mousevec) / (D.dot(D) - cos*cos)
+			#var pln := mousevec.cross(camera.project_ray_normal(Vector2(mouse.x, mouse.y + 1)))
+			#var t := pln.dot(camerapos-place_hint_vertices[0]) / pln.dot(place_hint_vertices[1] - place_hint_vertices[0])
+		t2 = clampf(t2, 0.00001, 0.99999)
+		var point := place_hint_vertices[0] + t2*(place_hint_vertices[1]-place_hint_vertices[0])
+		#point = camera.project_position(point1, 1.0)
+		
+		var array_mesh = ArrayMesh.new()
+		var arrs = []
+		arrs.resize(Mesh.ARRAY_MAX)
+		var colors : PackedColorArray = [Color.RED]
+		arrs[Mesh.ARRAY_VERTEX] = PackedVector3Array([point])
+		arrs[Mesh.ARRAY_COLOR] = colors
+		array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_POINTS, arrs)
+		
+		var mesh_instance = MeshInstance3D.new()
+		mesh_instance.mesh = array_mesh
+		mesh_instance.set_surface_override_material(0, ResourceLoader.load("res://point_material.tres", "Material") as Material)
+		if place_hint_point :
+			place_hint_point.queue_free()
+		add_child(mesh_instance)
+		place_hint_point = mesh_instance
 	return
 	var tf := 1.0 - pow(0.01, delta) # 1 -> 0.99
 	camera.transform = camera.transform.interpolate_with(Poses[active_pose].transform, tf)
@@ -32,10 +92,10 @@ func place_point() :
 	var array_mesh = ArrayMesh.new()
 	var arrs = []
 	arrs.resize(Mesh.ARRAY_MAX)
-	var vertices : PackedVector3Array = [camera.project_position(mouse, -0.5 + local_camera_distance), camera.project_position(mouse, 2 + local_camera_distance)]
+	place_hint_vertices = [camera.project_position(mouse, -0.5 + local_camera_distance), camera.project_position(mouse, 2 + local_camera_distance)]
 	var colors : PackedColorArray = [Color.WHITE, Color.BLACK]
 	var lines : PackedInt32Array = [0, 1]
-	arrs[Mesh.ARRAY_VERTEX] = vertices
+	arrs[Mesh.ARRAY_VERTEX] = place_hint_vertices
 	arrs[Mesh.ARRAY_COLOR] = colors
 	array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_POINTS, arrs)
 	arrs[Mesh.ARRAY_INDEX] = lines
@@ -74,6 +134,12 @@ func _input(event):
 			node.transform = node.transform.translated_local(Vector3(0.0, 0.0, 0.05))
 			local_camera_distance += 0.05
 			print(local_camera_distance)
+	elif Input.is_action_just_pressed("test") :
+		if (place_hint_vertices) :
+			var mouse := get_viewport().get_mouse_position()
+			var C := camera.unproject_position(place_hint_vertices[0])
+			var D := camera.unproject_position(place_hint_vertices[1]) - C
+			print_debug(mouse, C, D)
 	pass
 
 func rotate_camera(angle : float):
