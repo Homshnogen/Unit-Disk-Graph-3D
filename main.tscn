@@ -52,13 +52,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.6)
 [node name="Label" type="Label" parent="."]
 offset_right = 40.0
 offset_bottom = 23.0
-text = "Q: Add point
-I: Toggle instant graph fill
+text = "I: Toggle instant graph fill
 O: Toggle automatic graph fill
 P: Toggle pause graph fill
 S: Toggle camera focus on current point
 X: Step forward once in graph fill
 
+Q: Add point
+Ctrl + Q: Remove point
 
 Rotate camera by left click and drag
 Zoom camera by scroll wheel"

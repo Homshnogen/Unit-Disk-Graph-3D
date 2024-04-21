@@ -89,27 +89,34 @@ func drag_camera(x : float, y: float) :
 	elevate_camera(y)
 
 func place_point() :
-	var mouse := get_viewport().get_mouse_position()
-	var array_mesh = ArrayMesh.new()
-	var arrs = []
-	arrs.resize(Mesh.ARRAY_MAX)
-	place_hint_vertices = [camera.project_position(mouse, -0.5 + local_camera_distance), camera.project_position(mouse, 2 + local_camera_distance)]
-	var colors : PackedColorArray = [Color.WHITE, Color.BLACK]
-	var lines : PackedInt32Array = [0, 1]
-	arrs[Mesh.ARRAY_VERTEX] = place_hint_vertices
-	arrs[Mesh.ARRAY_COLOR] = colors
-	# array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_POINTS, arrs)
-	arrs[Mesh.ARRAY_INDEX] = lines
-	array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_LINES, arrs)
-	
-	var mesh_instance = MeshInstance3D.new()
-	mesh_instance.mesh = array_mesh
-	# mesh_instance.set_surface_override_material(0, ResourceLoader.load("res://point_material.tres", "Material") as Material)
-	mesh_instance.set_surface_override_material(0, ResourceLoader.load("res://line_material.tres", "Material") as Material)
 	if place_hint :
 		place_hint.queue_free()
-	add_child(mesh_instance)
-	place_hint = mesh_instance
+		place_hint = null
+		place_hint_point_mesh.queue_free()
+		place_hint_point_mesh = null
+		place_hint_vertices = []
+		point_cloud.add_vertex(place_hint_point)
+		
+	else :
+		var mouse := get_viewport().get_mouse_position()
+		var array_mesh = ArrayMesh.new()
+		var arrs = []
+		arrs.resize(Mesh.ARRAY_MAX)
+		place_hint_vertices = [camera.project_position(mouse, -0.5 + local_camera_distance), camera.project_position(mouse, 2 + local_camera_distance)]
+		var colors : PackedColorArray = [Color.WHITE, Color.BLACK]
+		var lines : PackedInt32Array = [0, 1]
+		arrs[Mesh.ARRAY_VERTEX] = place_hint_vertices
+		arrs[Mesh.ARRAY_COLOR] = colors
+		# array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_POINTS, arrs)
+		arrs[Mesh.ARRAY_INDEX] = lines
+		array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_LINES, arrs)
+		
+		var mesh_instance = MeshInstance3D.new()
+		mesh_instance.mesh = array_mesh
+		# mesh_instance.set_surface_override_material(0, ResourceLoader.load("res://point_material.tres", "Material") as Material)
+		mesh_instance.set_surface_override_material(0, ResourceLoader.load("res://line_material.tres", "Material") as Material)
+		add_child(mesh_instance)
+		place_hint = mesh_instance
 
 var local_camera_distance := 1.0
 var sphere_view := false
@@ -121,6 +128,15 @@ func _input(event):
 		drag_camera(event.relative.x / 180, event.relative.y / 180)
 	elif Input.is_action_just_pressed("toggle_camera"):
 		active_pose = (active_pose + 1) % Poses.size()
+	elif Input.is_action_just_pressed("pop_point"):
+		if place_hint :
+			place_hint.queue_free()
+			place_hint = null
+			place_hint_point_mesh.queue_free()
+			place_hint_point_mesh = null
+			place_hint_vertices = []
+		else :
+			point_cloud.pop_vertex()
 	elif (Input.is_action_just_pressed("place_point")) :
 		place_point()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_WHEEL_UP: 
@@ -138,7 +154,7 @@ func _input(event):
 			var mouse := get_viewport().get_mouse_position()
 			var C := camera.unproject_position(place_hint_vertices[0])
 			var D := camera.unproject_position(place_hint_vertices[1]) - C
-			print_debug(mouse, C, D)
+			print_debug(place_hint_point, point_cloud.to_local(place_hint_point))
 	elif Input.is_action_just_pressed("sphere_view") :
 		sphere_view = !sphere_view
 		if sphere_view :

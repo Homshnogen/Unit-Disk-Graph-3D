@@ -16,6 +16,17 @@ var cells : Dictionary # (Vector3i, Cell)
 
 signal bfs_next
 
+func add_vertex(point : Vector3) :
+	vertices.append(to_local(point))
+	bfs_reset()
+	update_mesh()
+	
+func pop_vertex() :
+	if vertices.size() > 1 :
+		vertices.resize(vertices.size()-1)
+		bfs_reset()
+		update_mesh()
+
 class bfs_Controller:
 	var running := true
 
@@ -33,9 +44,10 @@ func _ready():
 
 func _input(event):
 	if (Input.is_action_just_pressed("reset_points")) :
-		reset_points()
+		# reset_points()
 		bfs_reset()
-	elif (Input.is_action_just_pressed("step_forward")) and GlobalState.state == GlobalState.STATE_PAUSED :
+		update_mesh()
+	elif (Input.is_action_just_pressed("step_forward")) :
 		bfs_next.emit()
 		update_mesh()
 
@@ -62,6 +74,11 @@ func _process(delta):
 func bfs_reset(): # handles instances of bfs call memory
 	bfs_state.running = false
 	bfs_next.emit()
+	lines = PackedInt32Array()
+	colors = PackedColorArray()
+	colors.resize(vertices.size())
+	for i in vertices.size() :
+		colors[i] = Color.WHITE
 	bfs_state = bfs_Controller.new()
 	bfs(bfs_state)
 		
@@ -99,8 +116,8 @@ func bfs(state : bfs_Controller):
 	sphere_material.albedo_color.v = 1.0
 	setup_search()
 	var bfs_points := []
-	for i in range(vertices.size()) :
-		bfs_points.push_back(i)
+	for i in range(vertices.size(), 0, -1) :
+		bfs_points.push_back(i-1)
 	var bfs_queue := []
 	lines = []
 	var colori = 0.0
@@ -199,12 +216,9 @@ func update_mesh():
 
 func reset_points():
 	vertices = PackedVector3Array()
-	lines = PackedInt32Array()
-	colors = PackedColorArray()
 	
 	for i in range(numpoints):
 		vertices.append(scalef*( Vector3(randf(),randf(),randf()) - Vector3(0.5,0.5,0.5) ))
-		colors.append(Color.WHITE);
 	
 	update_mesh()
 
