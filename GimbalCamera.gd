@@ -128,13 +128,11 @@ func _input(event):
 			var node : Node3D = $CameraRotate/CameraElevate/Camera3D
 			node.transform = node.transform.translated_local(Vector3(0.0, 0.0, -0.05))
 			local_camera_distance -= 0.05
-			print(local_camera_distance)
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_WHEEL_DOWN: 
 		if local_camera_distance < 1.5 :
 			var node : Node3D = $CameraRotate/CameraElevate/Camera3D
 			node.transform = node.transform.translated_local(Vector3(0.0, 0.0, 0.05))
 			local_camera_distance += 0.05
-			print(local_camera_distance)
 	elif Input.is_action_just_pressed("test") :
 		if place_hint_vertices :
 			var mouse := get_viewport().get_mouse_position()
@@ -145,10 +143,10 @@ func _input(event):
 		sphere_view = !sphere_view
 		if sphere_view :
 			reparent(get_node("/root/Main/PointCloud/Sphere"))
-			position = Vector3i.ZERO
+			position = Vector3.ZERO
 		else :
 			reparent(get_node("/root/Main"))
-			position = Vector3i.ZERO
+			position = Vector3.ZERO
 	pass
 
 func rotate_camera(angle : float):

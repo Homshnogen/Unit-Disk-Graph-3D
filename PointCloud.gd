@@ -10,7 +10,7 @@ var lines : PackedInt32Array
 var colors : PackedColorArray
 var point_cloud_mesh : MeshInstance3D
 var sphere : Node3D
-var sphere_mesh : MeshInstance3D
+var sphere_material : StandardMaterial3D
 
 var cells : Dictionary # (Vector3i, Cell)
 
@@ -24,7 +24,8 @@ var bfs_state : bfs_Controller
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	sphere = $Sphere
-	sphere_mesh = $Sphere/MeshInstance3D
+	var sphere_mesh : MeshInstance3D = $Sphere/MeshInstance3D
+	sphere_material = sphere_mesh.mesh.surface_get_material(0)
 	scale = Vector3(1/scalef, 1/scalef, 1/scalef)
 	bfs_state = bfs_Controller.new()
 	reset_points()
@@ -40,7 +41,7 @@ func _input(event):
 
 var compound_time := 0.0
 # maybe make this into enum state (paused, auto, instant)
-var bfs_tick := 0.125
+var bfs_tick := 0.375
 
 func _process(delta):
 	match GlobalState.state:
@@ -65,7 +66,6 @@ func bfs_reset(): # handles instances of bfs call memory
 	bfs(bfs_state)
 		
 func setup_search(): # organizes vertices into unit grid cells which are aware of their neighbors
-	sphere.visible = false
 	cells.clear()
 	for i in range(vertices.size()):
 		var point := vertices[i]
@@ -92,6 +92,11 @@ func setup_search(): # organizes vertices into unit grid cells which are aware o
 		cell.points.append(i)
 
 func bfs(state : bfs_Controller):
+	sphere.visible = false
+	sphere.position = Vector3.ZERO
+	sphere_material.albedo_color.h = 1.0
+	sphere_material.albedo_color.s = 1.0
+	sphere_material.albedo_color.v = 1.0
 	setup_search()
 	var bfs_points := []
 	for i in range(vertices.size()) :
@@ -103,6 +108,8 @@ func bfs(state : bfs_Controller):
 	if !state.running :
 		return
 	sphere.visible = true
+	sphere_material.albedo_color.s = 0.8
+	sphere_material.albedo_color.v = 0.3
 	while (!bfs_points.is_empty()) :
 		if bfs_queue.is_empty() :
 			bfs_queue.push_back(bfs_points.pop_back())
@@ -110,6 +117,7 @@ func bfs(state : bfs_Controller):
 			colori += 1.0
 		var point := vertices[bfs_queue[0]]
 		sphere.position = point
+		sphere_material.albedo_color.h = colors[bfs_queue[0]].h
 		await bfs_next
 		if !state.running :
 			return
@@ -162,6 +170,10 @@ func bfs(state : bfs_Controller):
 			#cells.erase(cell.key)
 		bfs_queue.pop_front()
 	sphere.visible = false
+	sphere.position = Vector3.ZERO
+	sphere_material.albedo_color.h = 1.0
+	sphere_material.albedo_color.s = 1.0
+	sphere_material.albedo_color.v = 1.0
 	state.running = false
 
 func update_mesh():
