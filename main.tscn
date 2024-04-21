@@ -39,7 +39,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.6)
 offset_right = 40.0
 offset_bottom = 23.0
 text = "Q: Add point
-I: Toggle fill graph instantly
+I: Toggle instant graph fill
 O: Toggle automatic graph fill
 P: Toggle pause graph fill
 X: Step forward once in graph fill
