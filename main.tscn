@@ -1,10 +1,16 @@
-[gd_scene load_steps=6 format=3 uid="uid://c3pcaybieu1uj"]
+[gd_scene load_steps=8 format=3 uid="uid://c3pcaybieu1uj"]
 
 [ext_resource type="Script" path="res://PointCloud.gd" id="1_gxch6"]
 [ext_resource type="Script" path="res://GimbalCamera.gd" id="2_igwio"]
 [ext_resource type="Material" uid="uid://bollnhm40yjry" path="res://point_material.tres" id="2_ir81f"]
 [ext_resource type="Material" uid="uid://dx4ptsf34ckqp" path="res://line_material.tres" id="3_mpno3"]
 [ext_resource type="Environment" uid="uid://dmu17v8qg0ikm" path="res://new_environment.tres" id="5_2an0l"]
+[ext_resource type="Material" uid="uid://ddblbqrwkf3qj" path="res://sphere_material_3d.tres" id="5_kdf0v"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_w2qq1"]
+material = ExtResource("5_kdf0v")
+radial_segments = 32
+rings = 16
 
 [node name="Main" type="Node3D"]
 metadata/_edit_lock_ = true
@@ -17,6 +23,14 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 script = ExtResource("1_gxch6")
 point_material = ExtResource("2_ir81f")
 line_material = ExtResource("3_mpno3")
+
+[node name="Sphere" type="Node3D" parent="PointCloud"]
+visible = false
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PointCloud/Sphere"]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+transparency = 1.0
+mesh = SubResource("SphereMesh_w2qq1")
 
 [node name="GimbalCamera" type="Node3D" parent="." node_paths=PackedStringArray("point_cloud")]
 script = ExtResource("2_igwio")

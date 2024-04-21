@@ -8,7 +8,9 @@ extends Node3D
 var vertices : PackedVector3Array
 var lines : PackedInt32Array
 var colors : PackedColorArray
-var mesh_instance : MeshInstance3D
+var point_cloud_mesh : MeshInstance3D
+var sphere : Node3D
+var sphere_mesh : MeshInstance3D
 
 var cells : Dictionary # (Vector3i, Cell)
 
@@ -21,6 +23,8 @@ var bfs_state : bfs_Controller
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	sphere = $Sphere
+	sphere_mesh = $Sphere/MeshInstance3D
 	scale = Vector3(1/scalef, 1/scalef, 1/scalef)
 	bfs_state = bfs_Controller.new()
 	reset_points()
@@ -36,7 +40,7 @@ func _input(event):
 
 var compound_time := 0.0
 # maybe make this into enum state (paused, auto, instant)
-var bfs_speed := 0.00
+var bfs_tick := 0.125
 
 func _process(delta):
 	match GlobalState.state:
@@ -47,8 +51,8 @@ func _process(delta):
 				update_mesh()
 		GlobalState.STATE_AUTO :
 			compound_time += delta
-			if (compound_time >= bfs_speed) :
-				compound_time -= bfs_speed
+			if (compound_time >= bfs_tick) :
+				compound_time -= bfs_tick
 				bfs_next.emit()
 				update_mesh()
 		# GlobalState.STATE_PAUSED :
@@ -61,6 +65,7 @@ func bfs_reset(): # handles instances of bfs call memory
 	bfs(bfs_state)
 		
 func setup_search(): # organizes vertices into unit grid cells which are aware of their neighbors
+	sphere.visible = false
 	cells.clear()
 	for i in range(vertices.size()):
 		var point := vertices[i]
@@ -97,16 +102,18 @@ func bfs(state : bfs_Controller):
 	await bfs_next
 	if !state.running :
 		return
-	
+	sphere.visible = true
 	while (!bfs_points.is_empty()) :
 		if bfs_queue.is_empty() :
 			bfs_queue.push_back(bfs_points.pop_back())
 			colors[bfs_queue[0]] = Color.from_hsv(colori/vertices.size(), 0.5, 0.8)
 			colori += 1.0
-			await bfs_next
-			if !state.running :
-				return
 		var point := vertices[bfs_queue[0]]
+		sphere.position = point
+		await bfs_next
+		if !state.running :
+			return
+		
 		var cell : Cell = cells[Vector3i(floori(point.x), floori(point.y), floori(point.z))] # must exist
 		var i := 0
 		while i < cell.points.size() :
@@ -154,12 +161,12 @@ func bfs(state : bfs_Controller):
 				#n2.neighbors.remove_at(n2.neighbors.find(cell))
 			#cells.erase(cell.key)
 		bfs_queue.pop_front()
+	sphere.visible = false
 	state.running = false
 
 func update_mesh():
-	for n in get_children():
-		remove_child(n)
-		n.queue_free()
+	if point_cloud_mesh :
+		point_cloud_mesh.queue_free()
 	
 	var array_mesh = ArrayMesh.new()
 	var arrs = []
@@ -171,12 +178,12 @@ func update_mesh():
 		arrs[Mesh.ARRAY_INDEX] = lines
 		array_mesh.add_surface_from_arrays(PrimitiveMesh.PRIMITIVE_LINES, arrs)
 	
-	mesh_instance = MeshInstance3D.new()
-	mesh_instance.mesh = array_mesh
-	mesh_instance.set_surface_override_material(0, point_material)
+	point_cloud_mesh = MeshInstance3D.new()
+	point_cloud_mesh.mesh = array_mesh
+	point_cloud_mesh.set_surface_override_material(0, point_material)
 	if (lines.size() > 0) :
-		mesh_instance.set_surface_override_material(1, line_material)
-	add_child(mesh_instance)
+		point_cloud_mesh.set_surface_override_material(1, line_material)
+	add_child(point_cloud_mesh)
 
 func reset_points():
 	vertices = PackedVector3Array()
