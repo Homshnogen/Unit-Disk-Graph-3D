@@ -13,6 +13,7 @@ var place_hint : MeshInstance3D
 var place_hint_vertices : PackedVector3Array
 var place_hint_point : Vector3
 var place_hint_point_mesh : MeshInstance3D
+var cam_rot_active : bool
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	active_pose = 0
@@ -80,9 +81,14 @@ func _process(delta):
 			place_hint_point_mesh.queue_free()
 		add_child(mesh_instance)
 		place_hint_point_mesh = mesh_instance
+		
+	if cam_rot_active:
+		rotate_camera(0.003)
 	return
 	var tf := 1.0 - pow(0.01, delta) # 1 -> 0.99
 	camera.transform = camera.transform.interpolate_with(Poses[active_pose].transform, tf)
+	# Add a constant rotation to the camera to make it more interesting
+	
 
 func drag_camera(x : float, y: float) :
 	rotate_camera(x)
@@ -163,6 +169,12 @@ func _input(event):
 		else :
 			reparent(get_node("/root/Main"))
 			position = Vector3.ZERO
+	
+	elif Input.is_action_pressed("constant_camera_rotation"):
+		if cam_rot_active:
+			cam_rot_active = false
+		elif not cam_rot_active:
+			cam_rot_active = true
 	pass
 
 func rotate_camera(angle : float):
