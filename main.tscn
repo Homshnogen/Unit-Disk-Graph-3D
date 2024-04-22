@@ -75,6 +75,7 @@ O: Toggle automatic graph fill
 P: Toggle pause graph fill
 S: Toggle camera focus on current point
 Q: Step forward once in graph fill
+C: Toggle automatic rotation of camera
 X: Add point (Resets graph)
 Ctrl + X: Remove point (Resets graph)
 Up: Increase unit radius
@@ -82,5 +83,3 @@ Down: Decrease unit radius
 
 Rotate camera by left click and drag
 Zoom camera by scroll wheel"
-
-[connection signal="reset_graph" from="PointCloud" to="GimbalCamera" method="_on_point_cloud_reset_graph"]
