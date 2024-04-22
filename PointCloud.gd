@@ -61,6 +61,8 @@ func _ready():
 	reset_points()
 	bfs_reset()
 
+var show_cube := false
+
 func _input(event):
 	if Input.is_action_just_pressed("random_points") :
 		reset_points()
@@ -76,6 +78,11 @@ func _input(event):
 		rescale(scalef + 0.2)
 	elif Input.is_action_just_pressed("scale_up") :
 		rescale(scalef - 0.2)
+	elif Input.is_action_just_pressed("hide_cube") :
+		show_cube = !show_cube
+		if (bfs_state.running) :
+			sphere.visible = show_cube
+			cube.visible = show_cube
 
 var compound_time := 0.0
 # maybe make this into enum state (paused, auto, instant)
@@ -153,10 +160,10 @@ func bfs(state : bfs_Controller):
 	await bfs_next
 	if !state.running :
 		return
-	sphere.visible = true
+	sphere.visible = show_cube
 	sphere_material.albedo_color.s = 0.8
 	sphere_material.albedo_color.v = 0.3
-	cube.visible = true
+	cube.visible = show_cube
 	while (!bfs_points.is_empty()) :
 		if bfs_queue.is_empty() :
 			bfs_queue.push_back(bfs_points.pop_back())
