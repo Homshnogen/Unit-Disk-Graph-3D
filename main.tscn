@@ -76,6 +76,7 @@ P: Toggle pause graph fill
 S: Toggle camera focus on current point
 Q: Step forward once in graph fill
 C: Toggle automatic rotation of camera
+H: Toggle cube and sphere visability
 X: Add point (Resets graph)
 Ctrl + X: Remove point (Resets graph)
 Up: Increase unit radius

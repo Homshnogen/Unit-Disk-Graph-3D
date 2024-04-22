@@ -169,7 +169,6 @@ func _input(event):
 		else :
 			reparent(get_node("/root/Main"))
 			position = Vector3.ZERO
-	
 	elif Input.is_action_pressed("constant_camera_rotation"):
 		if cam_rot_active:
 			cam_rot_active = false
