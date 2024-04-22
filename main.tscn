@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://c3pcaybieu1uj"]
+[gd_scene load_steps=10 format=3 uid="uid://c3pcaybieu1uj"]
 
 [ext_resource type="Script" path="res://PointCloud.gd" id="1_gxch6"]
 [ext_resource type="Script" path="res://GimbalCamera.gd" id="2_igwio"]
@@ -11,6 +11,16 @@
 material = ExtResource("5_kdf0v")
 radial_segments = 32
 rings = 16
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f45ql"]
+transparency = 1
+shading_mode = 0
+specular_mode = 2
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.670588, 0.670588, 0.670588, 0.156863)
+
+[sub_resource type="BoxMesh" id="BoxMesh_dymav"]
+material = SubResource("StandardMaterial3D_f45ql")
 
 [node name="Main" type="Node3D"]
 metadata/_edit_lock_ = true
@@ -25,12 +35,18 @@ point_material = ExtResource("2_ir81f")
 line_material = ExtResource("3_mpno3")
 
 [node name="Sphere" type="Node3D" parent="PointCloud"]
-visible = false
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="PointCloud/Sphere"]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 transparency = 1.0
 mesh = SubResource("SphereMesh_w2qq1")
+
+[node name="Cube" type="Node3D" parent="PointCloud"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PointCloud/Cube"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+transparency = 1.0
+mesh = SubResource("BoxMesh_dymav")
 
 [node name="GimbalCamera" type="Node3D" parent="." node_paths=PackedStringArray("point_cloud")]
 script = ExtResource("2_igwio")
@@ -52,14 +68,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.6)
 [node name="Label" type="Label" parent="."]
 offset_right = 40.0
 offset_bottom = 23.0
-text = "I: Toggle instant graph fill
+text = "R: Reset graph
+Ctrl + R: Regenerate points
+I: Toggle instant graph fill
 O: Toggle automatic graph fill
 P: Toggle pause graph fill
 S: Toggle camera focus on current point
-X: Step forward once in graph fill
-
-Q: Add point
-Ctrl + Q: Remove point
+Q: Step forward once in graph fill
+X: Add point (Resets graph)
+Ctrl + X: Remove point (Resets graph)
+Up: Increase unit radius
+Down: Decrease unit radius
 
 Rotate camera by left click and drag
 Zoom camera by scroll wheel"
+
+[connection signal="reset_graph" from="PointCloud" to="GimbalCamera" method="_on_point_cloud_reset_graph"]
