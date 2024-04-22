@@ -3,7 +3,7 @@ extends Node
 const STATE_PAUSED := 0
 const STATE_AUTO := 1
 const STATE_INSTANT := 2
-var state := STATE_AUTO
+var state := STATE_INSTANT
 var idle_spin := 0.00
 
 # Called when the node enters the scene tree for the first time.

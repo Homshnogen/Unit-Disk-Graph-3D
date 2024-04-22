@@ -11,19 +11,24 @@ var colors : PackedColorArray
 var point_cloud_mesh : MeshInstance3D
 var sphere : Node3D
 var sphere_material : StandardMaterial3D
+var cube : Node3D
+var cube_material : StandardMaterial3D
 
 var cells : Dictionary # (Vector3i, Cell)
 
 signal bfs_next
+signal reset_graph
 
 func add_vertex(point : Vector3) :
 	vertices.append(to_local(point))
+	numpoints += 1
 	bfs_reset()
 	update_mesh()
 	
 func pop_vertex() :
 	if vertices.size() > 1 :
 		vertices.resize(vertices.size()-1)
+		numpoints -= 1
 		bfs_reset()
 		update_mesh()
 
@@ -32,24 +37,45 @@ class bfs_Controller:
 
 var bfs_state : bfs_Controller
 
+func rescale(new_scale : float) :
+	if (new_scale > 1 && new_scale < 10) :
+		var factor = new_scale/scalef
+		scalef = new_scale
+		scale = Vector3(1/scalef, 1/scalef, 1/scalef)
+		for i in vertices.size() :
+			vertices[i] *= factor
+		bfs_reset()
+		update_mesh()
+
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	sphere = $Sphere
 	var sphere_mesh : MeshInstance3D = $Sphere/MeshInstance3D
 	sphere_material = sphere_mesh.mesh.surface_get_material(0)
+	cube = $Cube
+	var cube_mesh : MeshInstance3D = $Cube/MeshInstance3D
+	cube_material = cube_mesh.mesh.surface_get_material(0)
 	scale = Vector3(1/scalef, 1/scalef, 1/scalef)
 	bfs_state = bfs_Controller.new()
 	reset_points()
 	bfs_reset()
 
 func _input(event):
-	if (Input.is_action_just_pressed("reset_points")) :
-		# reset_points()
+	if Input.is_action_just_pressed("random_points") :
+		reset_points()
 		bfs_reset()
 		update_mesh()
-	elif (Input.is_action_just_pressed("step_forward")) :
+	elif Input.is_action_just_pressed("reset_points") :
+		bfs_reset()
+		update_mesh()
+	elif Input.is_action_just_pressed("step_forward") :
 		bfs_next.emit()
 		update_mesh()
+	elif Input.is_action_just_pressed("scale_down") :
+		rescale(scalef + 0.2)
+	elif Input.is_action_just_pressed("scale_up") :
+		rescale(scalef - 0.2)
 
 var compound_time := 0.0
 # maybe make this into enum state (paused, auto, instant)
@@ -74,6 +100,7 @@ func _process(delta):
 func bfs_reset(): # handles instances of bfs call memory
 	bfs_state.running = false
 	bfs_next.emit()
+	reset_graph.emit()
 	lines = PackedInt32Array()
 	colors = PackedColorArray()
 	colors.resize(vertices.size())
@@ -114,6 +141,8 @@ func bfs(state : bfs_Controller):
 	sphere_material.albedo_color.h = 1.0
 	sphere_material.albedo_color.s = 1.0
 	sphere_material.albedo_color.v = 1.0
+	cube.visible = false
+	cube.position = Vector3.ZERO
 	setup_search()
 	var bfs_points := []
 	for i in range(vertices.size(), 0, -1) :
@@ -127,6 +156,7 @@ func bfs(state : bfs_Controller):
 	sphere.visible = true
 	sphere_material.albedo_color.s = 0.8
 	sphere_material.albedo_color.v = 0.3
+	cube.visible = true
 	while (!bfs_points.is_empty()) :
 		if bfs_queue.is_empty() :
 			bfs_queue.push_back(bfs_points.pop_back())
@@ -135,6 +165,7 @@ func bfs(state : bfs_Controller):
 		var point := vertices[bfs_queue[0]]
 		sphere.position = point
 		sphere_material.albedo_color.h = colors[bfs_queue[0]].h
+		cube.position = Vector3(floor(point.x)+0.5, floor(point.y)+0.5, floor(point.z)+0.5)
 		await bfs_next
 		if !state.running :
 			return
@@ -191,6 +222,7 @@ func bfs(state : bfs_Controller):
 	sphere_material.albedo_color.h = 1.0
 	sphere_material.albedo_color.s = 1.0
 	sphere_material.albedo_color.v = 1.0
+	cube.visible = false
 	state.running = false
 
 func update_mesh():

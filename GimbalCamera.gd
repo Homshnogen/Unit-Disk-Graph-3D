@@ -186,3 +186,13 @@ func elevate_camera(angle : float):
 	#var box = $CameraRotate/CameraElevate
 	#box.transform = box.transform.rotated(Vector3.LEFT, angle)
 	#pass
+
+
+func _on_point_cloud_reset_graph():
+	if place_hint :
+		place_hint.queue_free()
+		place_hint = null
+		place_hint_point_mesh.queue_free()
+		place_hint_point_mesh = null
+		place_hint_vertices = []
+		
